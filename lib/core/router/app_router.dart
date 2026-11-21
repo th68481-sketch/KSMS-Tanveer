@@ -2,13 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/constants/domain.dart';
-import '../core/router/route_paths.dart';
-import '../core/widgets/app_shell.dart';
-import '../features/auth/providers/session_controller.dart';
-import '../features/auth/ui/mfa_setup_screen.dart';
-import '../features/auth/ui/pending_screen.dart';
-import '../features/auth/ui/sign_in_screen.dart';
+import '../constants/domain.dart';
+import 'route_paths.dart';
+import '../widgets/app_shell.dart';
+import '../../features/auth/providers/session_controller.dart';
+import '../../features/auth/ui/mfa_setup_screen.dart';
+import '../../features/auth/ui/pending_screen.dart';
+import '../../features/auth/ui/profile_screen.dart';
+import '../../features/auth/ui/request_access_screen.dart';
+import '../../features/auth/ui/sign_in_screen.dart';
+import '../../features/auth/ui/status_check_screen.dart';
+import '../../features/dashboard/ui/dashboard_screen.dart';
+import '../../core/theme/design_tokens.dart';
+import '../../features/onboarding/ui/approval_queue_screen.dart';
+import '../../features/students/ui/student_directory_screen.dart';
+import '../../features/students/ui/student_profile_screen.dart';
+import '../../features/academics/ui/academic_setup_screen.dart';
+import '../utils/formatters.dart';
+import '../../features/communications/providers/notifications_providers.dart';
+import '../widgets/async_view.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final sessionAsync = ref.watch(sessionProvider);
@@ -59,7 +71,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: Routes.adminTenants, builder: (_, __) => const PlaceholderScreen(title: 'Tenants')),
           GoRoute(path: Routes.govRegistry, builder: (_, __) => const PlaceholderScreen(title: 'Gov Registry')),
           GoRoute(path: Routes.students, builder: (_, __) => const StudentDirectoryScreen()),
-          GoRoute(path: Routes.studentDetail, builder: (_, state) => StudentProfileScreen(studentId: state.pathParameters['id']!)),
+          GoRoute(path: '/school/students/:id', builder: (_, state) => StudentProfileScreen(studentId: state.pathParameters['id']!)),
           GoRoute(path: Routes.admissions, builder: (_, __) => const PlaceholderScreen(title: 'Admissions')),
           GoRoute(path: Routes.academics, builder: (_, __) => const AcademicSetupScreen()),
           GoRoute(path: Routes.assignments, builder: (_, __) => const PlaceholderScreen(title: 'Assignments')),
@@ -85,7 +97,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: Routes.reports, builder: (_, __) => const PlaceholderScreen(title: 'Reports Center')),
           GoRoute(path: Routes.audit, builder: (_, __) => const PlaceholderScreen(title: 'Audit Log Viewer')),
           GoRoute(path: Routes.settings, builder: (_, __) => const PlaceholderScreen(title: 'Settings & Matrix')),
-          GoRoute(path: Routes.profile, builder: (_, __) => const UserProfileScreen()),
+          GoRoute(path: Routes.profile, builder: (_, __) => const ProfileScreen()),
         ],
       ),
     ],
@@ -102,7 +114,7 @@ class PlaceholderScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.construction, size: 48, color: KsmsColors.teal500),
+          const Icon(Icons.construction, size: 48, color: Colors.amber),
           const SizedBox(height: 12),
           Text(title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),

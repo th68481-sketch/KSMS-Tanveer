@@ -75,8 +75,8 @@ final schoolDashboardProvider = FutureProvider.autoDispose
     final fees = results[3] as Map<String, dynamic>;
 
     return {
-      'students': _countOf(results[0] as List),
-      'staff': _countOf(results[1] as List),
+      'students': (results[0] as List).length,
+      'staff': (results[1] as List).length,
       'attendanceTotal': attendance['total'] as int,
       'attendancePresent': attendance['present'] as int,
       'feesDue': fees['due'] as double,
