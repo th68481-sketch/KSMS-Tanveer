@@ -13,7 +13,6 @@ import '../../../core/widgets/common.dart';
 import '../../../core/widgets/ksms_table.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/providers/session_controller.dart';
-import '../data/student_repository.dart';
 import '../providers/student_providers.dart';
 
 class StudentDirectoryScreen extends ConsumerStatefulWidget {

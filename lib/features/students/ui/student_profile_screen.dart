@@ -11,7 +11,6 @@ import '../../../core/widgets/common.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../academics/providers/academics_providers.dart';
 import '../../auth/providers/session_controller.dart';
-import '../data/student_repository.dart';
 import '../providers/student_providers.dart';
 
 /// Student 360° view: overview, enrollment history, guardians, attendance,
@@ -434,7 +433,7 @@ class _GuardiansTabState extends ConsumerState<_GuardiansTab> {
           TextFormField(controller: cnicC, decoration: InputDecoration(labelText: 'CNIC'), validator: V.cnic),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            initialValue: relationship,
+            value: relationship,
             decoration: InputDecoration(labelText: AppLocalizations.of(ctx)!.students_relationship),
             items: const [
               DropdownMenuItem(value: 'FATHER', child: Text('Father')),
@@ -660,7 +659,9 @@ class _DocumentsTabState extends ConsumerState<_DocumentsTab> {
       withData: true,
     );
     final f = res?.files.firstOrNull;
-    if (f?.bytes == null) return;
+    if (f == null || f.bytes == null) return;
+    final name = f.name;
+    final bytes = f.bytes!;
     final session = ref.read(sessionProvider).valueOrNull!;
     setState(() => _busy = true);
     try {
@@ -668,9 +669,9 @@ class _DocumentsTabState extends ConsumerState<_DocumentsTab> {
             tenantId: session.activeTenantId!,
             campusId: session.activeCampusId,
             studentId: widget.studentId,
-            filename: f.name,
-            bytes: f.bytes!,
-            contentType: f.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+            filename: name,
+            bytes: bytes,
+            contentType: name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
           );
       ref.invalidate(studentDocumentsProvider(widget.studentId));
     } catch (e) {
