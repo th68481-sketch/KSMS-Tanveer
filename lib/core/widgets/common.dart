@@ -127,6 +127,7 @@ Future<bool> confirmAction(
 }) async {
   final res = await showDialog<bool>(
     context: context,
+    useRootNavigator: true,
     builder: (context) => AlertDialog(
       title: Text(title),
       content: Text(message),
@@ -166,6 +167,7 @@ Future<bool> showFormSheet(
   final formKey = GlobalKey<FormState>();
   final res = await showDialog<bool>(
     context: context,
+    useRootNavigator: true,
     builder: (dialogContext) => Dialog(
       shape: RoundedRectangleBorder(borderRadius: KsmsRadii.lg),
       child: ConstrainedBox(

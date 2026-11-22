@@ -145,12 +145,13 @@ class _AppShellState extends ConsumerState<AppShell> {
               style: const TextStyle(fontSize: 14, color: KsmsColors.teal600),
             ),
           ),
-          onSelected: (v) {
+          onSelected: (v) async {
             switch (v) {
               case 'profile':
                 context.push(Routes.profile);
               case 'signout':
-                ref.read(sessionProvider.notifier).signOut();
+                await ref.read(sessionProvider.notifier).signOut();
+                if (context.mounted) context.go(Routes.signIn);
             }
           },
           itemBuilder: (_) => [
