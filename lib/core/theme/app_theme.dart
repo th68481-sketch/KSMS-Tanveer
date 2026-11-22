@@ -37,7 +37,7 @@ class AppTheme {
           color: isLight ? KsmsColors.navy900 : Colors.white,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         color: isLight ? Colors.white : KsmsColors.navy800,
         shape: RoundedRectangleBorder(

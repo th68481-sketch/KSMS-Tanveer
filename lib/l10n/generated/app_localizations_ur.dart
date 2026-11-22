@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -61,7 +63,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get common_error => 'کچھ غلط ہو گیا';
 
   @override
-  String get common_offlineHint => 'انٹرنیٹ مسئلہ — دوبارہ کوشش کریں؛ آف لائن کام محفوظ قطار میں ہے';
+  String get common_offlineHint =>
+      'انٹرنیٹ مسئلہ — دوبارہ کوشش کریں؛ آف لائن کام محفوظ قطار میں ہے';
 
   @override
   String get common_yes => 'ہاں';
@@ -262,7 +265,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get auth_welcomeTitle => 'کے ایس ایم ایس میں خوش آمدید';
 
   @override
-  String get auth_welcomeSubtitle => 'کراچی اسکول مینجمنٹ سسٹم — نجی اور سرکاری اسکولوں کے لیے ایک پلیٹ فارم، ہر کیمپس کے لیے۔';
+  String get auth_welcomeSubtitle =>
+      'کراچی اسکول مینجمنٹ سسٹم — نجی اور سرکاری اسکولوں کے لیے ایک پلیٹ فارم، ہر کیمپس کے لیے۔';
 
   @override
   String get auth_emailLabel => 'ای میل';
@@ -280,7 +284,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get auth_checkStatus => 'درخواست کی حیثیت دیکھیں';
 
   @override
-  String get auth_signInFailed => 'سائن اِن ناکام۔ ای میل اور پاس ورڈ چیک کریں۔';
+  String get auth_signInFailed =>
+      'سائن اِن ناکام۔ ای میل اور پاس ورڈ چیک کریں۔';
 
   @override
   String get auth_resetSent => 'پاس ورڈ ری سیٹ ای میل بھیج دیا گیا';
@@ -331,7 +336,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get req_reference => 'درخواست ریفرنس';
 
   @override
-  String get req_referenceHint => 'تصدیقی پیغام سے ملنے والا ریفرنس کوڈ درج کریں';
+  String get req_referenceHint =>
+      'تصدیقی پیغام سے ملنے والا ریفرنس کوڈ درج کریں';
 
   @override
   String get req_statusTitle => 'درخواست کی حیثیت';
@@ -346,13 +352,15 @@ class AppLocalizationsUr extends AppLocalizations {
   String get pending_title => 'آپ کی درخواست زیرِ جائزہ ہے';
 
   @override
-  String get pending_body => 'پلیٹ فارم ایڈمن یا متعلقہ سرکاری اتھارٹی آپ کی درخواست کا جائزہ لے گا۔ منظوری کے بعد آپ کو ای میل کے ذریعے ایکٹیویشن لنک موصول ہوگا۔';
+  String get pending_body =>
+      'پلیٹ فارم ایڈمن یا متعلقہ سرکاری اتھارٹی آپ کی درخواست کا جائزہ لے گا۔ منظوری کے بعد آپ کو ای میل کے ذریعے ایکٹیویشن لنک موصول ہوگا۔';
 
   @override
   String get mfa_title => 'توثیق دوہری (MFA) سے اپنا اکاؤنٹ محفوظ کریں';
 
   @override
-  String get mfa_body => 'آپ کے عہدے کے لیے دوہری توثیق لازمی ہے۔ کوئر کوڈ اسکین کریں یا سیکرٹ کی اپنی ایپ میں درج کریں، پھر کوڈ کی تصدیق کریں۔';
+  String get mfa_body =>
+      'آپ کے عہدے کے لیے دوہری توثیق لازمی ہے۔ کوئر کوڈ اسکین کریں یا سیکرٹ کی اپنی ایپ میں درج کریں، پھر کوڈ کی تصدیق کریں۔';
 
   @override
   String get mfa_secret => 'سیکرٹ کلید';
@@ -433,7 +441,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get appr_provisioned => 'ادارہ بنا دیا گیا اور دعوت نامہ بھیج دیا گیا';
 
   @override
-  String get appr_membershipCreated => 'عملہ رسائی دی گئی اور رکن کو مطلع کیا گیا';
+  String get appr_membershipCreated =>
+      'عملہ رسائی دی گئی اور رکن کو مطلع کیا گیا';
 
   @override
   String get dash_studentsActive => 'فعال طلبہ';
@@ -511,7 +520,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get students_merge => 'مماثل ریکارڈ ضم کریں';
 
   @override
-  String get students_mergeConfirm => 'مماثل ریکارڈ اس طالب علم میں ضم کر دیں؟ سرپرست، داخلے اور فیس محفوظ ریکارڈ کے ساتھ چلے جائیں گے۔';
+  String get students_mergeConfirm =>
+      'مماثل ریکارڈ اس طالب علم میں ضم کر دیں؟ سرپرست، داخلے اور فیس محفوظ ریکارڈ کے ساتھ چلے جائیں گے۔';
 
   @override
   String get students_duplicates => 'ممکنہ مماثلت';
@@ -613,7 +623,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get adm_finalize => 'داخلہ مکمل کریں';
 
   @override
-  String get adm_finalizeHint => 'طالب علم ریکارڈ، پہلا داخلہ اور سرپرست کا رابطہ بناتا ہے';
+  String get adm_finalizeHint =>
+      'طالب علم ریکارڈ، پہلا داخلہ اور سرپرست کا رابطہ بناتا ہے';
 
   @override
   String get adm_applicationNo => 'درخواست نمبر';
@@ -744,7 +755,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get tt_autoArrange => 'ہفتہ خود کار ترتیب';
 
   @override
-  String get tt_autoHint => 'خودکار بldrہر استاد کی تعیناتی پہلے خالی پیریڈ میں رکھتا ہے؛ استاد، کمرہ اور سیکشن کے تصادم سے بچتا ہے۔';
+  String get tt_autoHint =>
+      'خودکار بldrہر استاد کی تعیناتی پہلے خالی پیریڈ میں رکھتا ہے؛ استاد، کمرہ اور سیکشن کے تصادم سے بچتا ہے۔';
 
   @override
   String get tt_clear => 'ہفتہ صاف کریں';
@@ -894,7 +906,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get exam_publish => 'نتائج شائع کریں';
 
   @override
-  String get exam_publishConfirm => 'نتائج شائع کریں؟ منظور شدہ نمبر والدین و طلبہ کو دکھیں گے اور نمبر قفل ہو جائیں گے۔';
+  String get exam_publishConfirm =>
+      'نتائج شائع کریں؟ منظور شدہ نمبر والدین و طلبہ کو دکھیں گے اور نمبر قفل ہو جائیں گے۔';
 
   @override
   String get exam_reportCards => 'رپورٹ کارڈز';
@@ -978,7 +991,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get fin_generateInvoices => 'انوائسز بنائیں';
 
   @override
-  String get fin_generateHint => 'منتخب کلاس کے فعال طلبہ کے لیے مخصوص ادوار کی انوائسز بناتا ہے';
+  String get fin_generateHint =>
+      'منتخب کلاس کے فعال طلبہ کے لیے مخصوص ادوار کی انوائسز بناتا ہے';
 
   @override
   String get fin_billingPeriod => 'بلنگ دور (مثلاً 2026-01)';
@@ -1421,7 +1435,8 @@ class AppLocalizationsUr extends AppLocalizations {
   String get set_attStatuses => 'حاضری حالتیں';
 
   @override
-  String get set_attStatusesHint => 'PRESENT, ABSENT, LATE, LEAVE, EXCUSED میں سے کوما سے جدا';
+  String get set_attStatusesHint =>
+      'PRESENT, ABSENT, LATE, LEAVE, EXCUSED میں سے کوما سے جدا';
 
   @override
   String get set_semis => 'سیمس کوڈ';

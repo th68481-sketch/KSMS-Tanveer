@@ -150,8 +150,17 @@ class _AppShellState extends ConsumerState<AppShell> {
               case 'profile':
                 context.push(Routes.profile);
               case 'signout':
-                await ref.read(sessionProvider.notifier).signOut();
-                if (context.mounted) context.go(Routes.signIn);
+                final ok = await confirmAction(
+                  context,
+                  title: 'Sign out',
+                  message: 'Are you sure you want to sign out of KSMS?',
+                  confirmLabel: 'Sign out',
+                  destructive: true,
+                );
+                if (ok) {
+                  await ref.read(sessionProvider.notifier).signOut();
+                  if (context.mounted) context.go(Routes.signIn);
+                }
             }
           },
           itemBuilder: (_) => [

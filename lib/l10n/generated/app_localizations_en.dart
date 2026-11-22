@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -61,7 +63,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_error => 'Something went wrong';
 
   @override
-  String get common_offlineHint => 'Connection issue — tap retry; offline work is queued safely';
+  String get common_offlineHint =>
+      'Connection issue — tap retry; offline work is queued safely';
 
   @override
   String get common_yes => 'Yes';
@@ -262,7 +265,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_welcomeTitle => 'Welcome to KSMS';
 
   @override
-  String get auth_welcomeSubtitle => 'Karachi School Management System — one platform for private and government schools, across every campus.';
+  String get auth_welcomeSubtitle =>
+      'Karachi School Management System — one platform for private and government schools, across every campus.';
 
   @override
   String get auth_emailLabel => 'Email';
@@ -280,7 +284,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_checkStatus => 'Check request status';
 
   @override
-  String get auth_signInFailed => 'Sign-in failed. Check your email and password.';
+  String get auth_signInFailed =>
+      'Sign-in failed. Check your email and password.';
 
   @override
   String get auth_resetSent => 'Password reset email sent';
@@ -331,7 +336,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get req_reference => 'Request reference';
 
   @override
-  String get req_referenceHint => 'Enter the reference code from your request confirmation';
+  String get req_referenceHint =>
+      'Enter the reference code from your request confirmation';
 
   @override
   String get req_statusTitle => 'Request status';
@@ -346,13 +352,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pending_title => 'Your request is under review';
 
   @override
-  String get pending_body => 'A Platform Admin or the relevant Government Authority will review your request. You will receive an email with an activation link once approved.';
+  String get pending_body =>
+      'A Platform Admin or the relevant Government Authority will review your request. You will receive an email with an activation link once approved.';
 
   @override
   String get mfa_title => 'Secure your account with MFA';
 
   @override
-  String get mfa_body => 'Your role requires two-factor authentication. Scan the QR code or enter the secret into your authenticator app, then verify a code to finish setup.';
+  String get mfa_body =>
+      'Your role requires two-factor authentication. Scan the QR code or enter the secret into your authenticator app, then verify a code to finish setup.';
 
   @override
   String get mfa_secret => 'Secret key';
@@ -433,7 +441,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appr_provisioned => 'Organization provisioned and invitation sent';
 
   @override
-  String get appr_membershipCreated => 'Staff access granted and member notified';
+  String get appr_membershipCreated =>
+      'Staff access granted and member notified';
 
   @override
   String get dash_studentsActive => 'Active students';
@@ -511,7 +520,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get students_merge => 'Merge duplicates';
 
   @override
-  String get students_mergeConfirm => 'Merge the duplicate record into this student? Guardians, enrollments and finance follow the kept record.';
+  String get students_mergeConfirm =>
+      'Merge the duplicate record into this student? Guardians, enrollments and finance follow the kept record.';
 
   @override
   String get students_duplicates => 'Potential duplicates';
@@ -613,7 +623,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adm_finalize => 'Finalize enrollment';
 
   @override
-  String get adm_finalizeHint => 'Creates the student record, first enrollment and guardian link';
+  String get adm_finalizeHint =>
+      'Creates the student record, first enrollment and guardian link';
 
   @override
   String get adm_applicationNo => 'Application No.';
@@ -744,7 +755,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tt_autoArrange => 'Auto-arrange week';
 
   @override
-  String get tt_autoHint => 'Greedy builder places each teacher assignment into the first free period, avoiding teacher, room and section clashes.';
+  String get tt_autoHint =>
+      'Greedy builder places each teacher assignment into the first free period, avoiding teacher, room and section clashes.';
 
   @override
   String get tt_clear => 'Clear week';
@@ -804,10 +816,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get att_approveSession => 'Approve session';
 
   @override
-  String get att_correctionReason => 'Correction reason (required for locked sessions)';
+  String get att_correctionReason =>
+      'Correction reason (required for locked sessions)';
 
   @override
-  String get att_offlineQueued => 'No connection — saved to encrypted offline queue';
+  String get att_offlineQueued =>
+      'No connection — saved to encrypted offline queue';
 
   @override
   String get att_conflicts => 'Sync conflicts';
@@ -894,7 +908,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exam_publish => 'Publish results';
 
   @override
-  String get exam_publishConfirm => 'Publish results? Approved marks become visible to parents and students and marks are locked.';
+  String get exam_publishConfirm =>
+      'Publish results? Approved marks become visible to parents and students and marks are locked.';
 
   @override
   String get exam_reportCards => 'Report cards';
@@ -978,7 +993,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fin_generateInvoices => 'Generate invoices';
 
   @override
-  String get fin_generateHint => 'Creates invoices for active students of the selected class for the given period';
+  String get fin_generateHint =>
+      'Creates invoices for active students of the selected class for the given period';
 
   @override
   String get fin_billingPeriod => 'Billing period (e.g. 2026-01)';
@@ -1421,7 +1437,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get set_attStatuses => 'Attendance statuses';
 
   @override
-  String get set_attStatusesHint => 'Comma-separated subset of PRESENT, ABSENT, LATE, LEAVE, EXCUSED';
+  String get set_attStatusesHint =>
+      'Comma-separated subset of PRESENT, ABSENT, LATE, LEAVE, EXCUSED';
 
   @override
   String get set_semis => 'SEMIS code';
