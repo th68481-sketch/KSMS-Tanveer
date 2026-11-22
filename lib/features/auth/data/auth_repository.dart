@@ -16,7 +16,7 @@ class AuthRepository {
   Future<void> signOut() => _client.auth.signOut();
 
   Future<void> resetPassword(String email) =>
-      _client.auth.resetPasswordForEmail(email);
+      _client.auth.resetPasswordForEmail(email, redirectTo: 'https://th68481-sketch.github.io/KSMS-Tanveer/');
 
   /// Public (possibly anonymous) school registration request.
   Future<String> submitSchoolRegistration({
