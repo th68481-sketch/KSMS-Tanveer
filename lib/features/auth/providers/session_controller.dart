@@ -138,21 +138,30 @@ class SessionState {
 }
 
 class SessionController extends AsyncNotifier<SessionState> {
+  String? _loadedUserId;
+
   @override
   Future<SessionState> build() async {
-    final client = ref.watch(supabaseProvider);
+    final client = ref.read(supabaseProvider);
     final session = client.auth.currentSession;
     final authSub = client.auth.onAuthStateChange.listen((data) {
       final event = data.event;
-      if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.signedOut) {
+      final uid = data.session?.user.id;
+      if (event == AuthChangeEvent.signedOut) {
+        _loadedUserId = null;
+        state = const AsyncValue.data(SessionState(phase: SessionPhase.signedOut));
+      } else if (event == AuthChangeEvent.signedIn && uid != null && uid != _loadedUserId) {
+        _loadedUserId = uid;
         ref.invalidateSelf();
       }
     });
     ref.onDispose(() => authSub.cancel());
     if (session == null) {
+      _loadedUserId = null;
       return const SessionState(phase: SessionPhase.signedOut);
     }
-    return _loadFor(client.auth.currentUser!.id);
+    _loadedUserId = client.auth.currentUser!.id;
+    return _loadFor(_loadedUserId!);
   }
 
   Future<SessionState> _loadFor(String userId) async {
@@ -217,7 +226,7 @@ class SessionController extends AsyncNotifier<SessionState> {
     final ids = memberships.map((m) => m.tenantId).whereType<String>().toSet().toList();
     if (ids.isEmpty) return const [];
     try {
-      final rows = await client.schema('app').from('tenants').select('id,name,type,status').inFilter('id', ids);
+      final rows = await client.from('tenants').select('id,name,type,status').inFilter('id', ids);
       return rows.map<TenantSummary>((r) => TenantSummary(
             id: r['id'] as String,
             name: (r['name'] as String?) ?? '',
@@ -225,17 +234,7 @@ class SessionController extends AsyncNotifier<SessionState> {
             status: (r['status'] as String?) ?? 'ACTIVE',
           )).toList();
     } catch (_) {
-      try {
-        final rows = await client.from('tenants').select('id,name,type,status').inFilter('id', ids);
-        return rows.map<TenantSummary>((r) => TenantSummary(
-              id: r['id'] as String,
-              name: (r['name'] as String?) ?? '',
-              type: TenantTypeX.from((r['type'] as String?) ?? 'PRIVATE'),
-              status: (r['status'] as String?) ?? 'ACTIVE',
-            )).toList();
-      } catch (_) {
-        return ids.map((id) => TenantSummary(id: id, name: 'KSMS School', type: TenantType.private, status: 'ACTIVE')).toList();
-      }
+      return ids.map((id) => TenantSummary(id: id, name: 'KSMS School', type: TenantType.private, status: 'ACTIVE')).toList();
     }
   }
 
@@ -243,7 +242,7 @@ class SessionController extends AsyncNotifier<SessionState> {
       SupabaseClient client, List<TenantSummary> tenants) async {
     if (tenants.isEmpty) return const [];
     try {
-      final rows = await client.schema('app').from('campuses').select('id,tenant_id,campus_code,name').inFilter('tenant_id', tenants.map((t) => t.id).toList());
+      final rows = await client.from('campuses').select('id,tenant_id,campus_code,name').inFilter('tenant_id', tenants.map((t) => t.id).toList());
       return rows.map<CampusSummary>((r) => CampusSummary(
             id: r['id'] as String,
             tenantId: r['tenant_id'] as String,
@@ -251,17 +250,7 @@ class SessionController extends AsyncNotifier<SessionState> {
             code: (r['campus_code'] as String?) ?? '',
           )).toList();
     } catch (_) {
-      try {
-        final rows = await client.from('campuses').select('id,tenant_id,campus_code,name').inFilter('tenant_id', tenants.map((t) => t.id).toList());
-        return rows.map<CampusSummary>((r) => CampusSummary(
-              id: r['id'] as String,
-              tenantId: r['tenant_id'] as String,
-              name: (r['name'] as String?) ?? '',
-              code: (r['campus_code'] as String?) ?? '',
-            )).toList();
-      } catch (_) {
-        return const [];
-      }
+      return const [];
     }
   }
 
