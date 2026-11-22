@@ -45,7 +45,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             return loc == Routes.pending ? null : Routes.pending;
           }
           if (session.phase == SessionPhase.mfaRequired) {
-            return Routes.dashboard;
+            return null;
           }
           if (isAuthRoute || loc == Routes.pending || loc == Routes.mfaSetup) {
             return Routes.dashboard;
