@@ -1,16 +1,20 @@
-# ksms
+# Karachi School Management System (KSMS)
 
-A new Flutter project.
+Complete, multi-tenant school management system built with Flutter and Supabase.
 
-## Getting Started
+## Prerequisites
+- Flutter SDK (3.24.5+)
+- Supabase CLI
 
-This project is a starting point for a Flutter application.
+## Setup
+1. `flutter pub get`
+2. `flutter pub run build_runner build`
+3. `supabase init` (if not done)
+4. Update `.env` with your project keys.
+5. Push migrations: `supabase db push`
+6. Deploy functions: `supabase functions deploy`
+7. Bootstrap: `./scripts/bootstrap.sh <email> <password> <setup_token>`
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Deployment
+- Frontend: `flutter build web`
+- Backend: Supabase manages PostgreSQL, Edge Functions, Auth, and Storage automatically.
