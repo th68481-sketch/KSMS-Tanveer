@@ -51,27 +51,3 @@ final staffListProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>
   final session = ref.watch(sessionProvider).valueOrNull;
   return ref.watch(academicsRepositoryProvider).staff(campusId: session?.activeCampusId);
 });
-
-final assignmentsProvider =
-    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
-  final session = ref.watch(sessionProvider).valueOrNull;
-  final year = ref.watch(currentYearProvider);
-  return ref.watch(academicsRepositoryProvider).assignments(
-        yearId: year?['id'] as String?,
-        campusId: session?.activeCampusId,
-      );
-});
-
-final timetableSlotsProvider = FutureProvider.autoDispose
-    .family<List<Map<String, dynamic>>, ({String yearId, String? termId, String? sectionId})>(
-  (ref, p) {
-    return ref
-        .watch(academicsRepositoryProvider)
-        .timetableSlots(yearId: p.yearId, termId: p.termId, sectionId: p.sectionId);
-  },
-);
-
-final homeworkProvider = FutureProvider.autoDispose
-    .family<List<Map<String, dynamic>>, ({String? sectionId, String? staffId})>((ref, p) {
-  return ref.watch(academicsRepositoryProvider).homework(sectionId: p.sectionId, staffId: p.staffId);
-});
