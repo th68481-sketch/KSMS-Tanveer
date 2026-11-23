@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -104,21 +105,144 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class PlaceholderScreen extends StatelessWidget {
+class PlaceholderScreen extends ConsumerWidget {
   const PlaceholderScreen({super.key, required this.title});
   final String title;
 
+  String _tableForTitle() {
+    switch (title.toLowerCase()) {
+      case 'tenants':
+        return 'tenants';
+      case 'gov registry':
+        return 'campuses';
+      case 'admissions':
+        return 'admissions';
+      case 'assignments':
+        return 'teacher_assignments';
+      case 'timetable':
+        return 'timetable_slots';
+      case 'homework':
+        return 'homework';
+      case 'exams & marks':
+        return 'exams';
+      case 'attendance workspace':
+        return 'attendance_sessions';
+      case 'fee management':
+      case 'fee counter':
+      case 'reconciliation':
+        return 'invoices';
+      case 'government grants':
+        return 'grants';
+      case 'budgets':
+        return 'budgets';
+      case 'expenses':
+        return 'expenses';
+      case 'hr & staff':
+      case 'staff attendance':
+        return 'staff';
+      case 'leave requests':
+        return 'leave_requests';
+      case 'payroll':
+        return 'payroll_runs';
+      case 'library':
+        return 'library_items';
+      case 'transport':
+        return 'transport_routes';
+      case 'inventory':
+        return 'inventory_assets';
+      case 'notices board':
+        return 'notices';
+      case 'audit log viewer':
+        return 'audit_events';
+      case 'settings & matrix':
+        return 'roles';
+      default:
+        return 'profiles';
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return Center(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final client = ref.watch(supabaseProvider);
+    final table = _tableForTitle();
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.construction, size: 48, color: Colors.amber),
-          const SizedBox(height: 12),
-          Text(title, style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 8),
-          const Text('Fully specified in DB schema & backend RPCs. UI module module expansion ready.'),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.headlineSmall),
+                    const SizedBox(height: 4),
+                    Text('Connected table: public.$table',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
+              Chip(label: const Text('Live DB')),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: FutureBuilder<List>>(
+              future: client.from(table).select().limit(50).then(
+                    (v) => List>.from(v),
+                  ),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('Error loading $table: ${snap.error}'),
+                    ),
+                  );
+                }
+                final rows = snap.data ?? const [];
+                if (rows.isEmpty) {
+                  return Card(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text('No records found in public.$table yet.'),
+                      ),
+                    ),
+                  );
+                }
+                return ListView.separated(
+                  itemCount: rows.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final r = rows[i];
+                    final primary = (r['name'] ??
+                            r['title'] ??
+                            r['full_name'] ??
+                            r['code'] ??
+                            r['id'] ??
+                            'Record #${i + 1}')
+                        .toString();
+                    final secondary = r.entries
+                        .where((e) => e.key != 'id' && e.value != null)
+                        .take(3)
+                        .map((e) => '${e.key}: ${e.value}')
+                        .join(' • ');
+                    return ListTile(
+                      leading: CircleAvatar(child: Text('${i + 1}')),
+                      title: Text(primary, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(secondary, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

@@ -289,10 +289,11 @@ class _AppShellState extends ConsumerState<AppShell> {
                         selected: router == item.path,
                         expanded: expanded,
                         onTap: () {
-                          context.go(item.path);
-                          if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
-                            Navigator.pop(context);
+                          final rootScaffold = context.findRootAncestorStateOfType<ScaffoldState>();
+                          if (rootScaffold?.isDrawerOpen ?? false) {
+                            Navigator.of(context).pop();
                           }
+                          context.go(item.path);
                         },
                       ),
                   ],
