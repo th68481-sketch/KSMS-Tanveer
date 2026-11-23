@@ -7,27 +7,37 @@ class ApprovalRepository {
   ApprovalRepository(this._client);
   final SupabaseClient _client;
 
-  Future<List<Map<String, dynamic>>> listRequests({String? state, String? kind}) async {
+  Future<List>> listRequests({String? state, String? kind}) async {
     var q = _client.from('access_requests').select();
-    if (state != null && state != 'ALL') q = q.eq('state', state);
     if (kind != null && kind != 'ALL') q = q.eq('kind', kind);
     final rows = await q.order('submitted_at', ascending: false).limit(200);
-    return rows.cast<Map<String, dynamic>>();
+    final list = List.of(rows).map((e) => Map.of(e as Map)).cast>().toList();
+    if (state == null || state == 'ALL') return list;
+    if (state == 'PENDING_REVIEW') {
+      return list.where((r) {
+        final st = (r['state'] ?? r['status'] ?? '').toString().toUpperCase();
+        return st == 'PENDING_REVIEW' || st == 'REQUESTED' || st == 'SUBMITTED' || st == 'PENDING';
+      }).toList();
+    }
+    return list.where((r) {
+      final st = (r['state'] ?? r['status'] ?? '').toString().toUpperCase();
+      return st == state.toUpperCase();
+    }).toList();
   }
 
-  Future<List<Map<String, dynamic>>> listActions(String requestId) async {
+  Future<List>> listActions(String requestId) async {
     final rows = await _client
         .from('approval_actions')
         .select()
         .eq('access_request_id', requestId)
         .order('created_at');
-    return rows.cast<Map<String, dynamic>>();
+    return rows.cast>();
   }
 
   /// Decision runs through the trusted Edge Function which validates the
   /// caller's permissions, records the append-only approval action,
   /// provisions tenants/memberships and dispatches invitations.
-  Future<Map<String, dynamic>?> decide({
+  Future?> decide({
     required String requestId,
     required String decision,
     required String reason,
@@ -38,6 +48,17 @@ class ApprovalRepository {
       'reason': reason,
     });
     return res.data is Map ? Map<String, dynamic>.from(res.data as Map) : null;
+  }
+
+  Future<void> deleteRequest(String requestId) async {
+    await _client.from('access_requests').delete().eq('id', requestId);
+  }
+
+  Future<void> directStateUpdate(String requestId, String nextState, String reason) async {
+    await _client.from('access_requests').update({
+      'state': nextState,
+      'decision_reason': reason,
+    }).eq('id', requestId);
   }
 
   /// Signed URLs for evidence review (private bucket).
@@ -56,19 +77,6 @@ final approvalRepositoryProvider =
     Provider<ApprovalRepository>((ref) => ApprovalRepository(ref.watch(supabaseProvider)));
 
 final approvalQueueProvider = FutureProvider.autoDispose
-    .family<List<Map<String, dynamic>>, String>((ref, state) {
+    .family<List>, String>((ref, state) {
   return ref.watch(approvalRepositoryProvider).listRequests(state: state);
-
-  Future<void> deleteRequest(String requestId) async {
-    await _client.from('access_requests').delete().eq('id', requestId);
-  }
-
-  Future<void> directStateUpdate(String requestId, String nextState, String reason) async {
-    await _client.from('access_requests').update({
-      'state': nextState,
-      'decision_reason': reason,
-    }).eq('id', requestId);
-  }
-}
-
-);
+});
