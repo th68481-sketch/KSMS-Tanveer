@@ -382,15 +382,9 @@ class _DrawerSupabaseQuotaMeter extends StatefulWidget {
 }
 
 class _DrawerSupabaseQuotaMeterState extends State<_DrawerSupabaseQuotaMeter> {
-  late Future> _usageFuture;
+  late final _usageFuture = _loadUsage();
 
-  @override
-  void initState() {
-    super.initState();
-    _usageFuture = _loadUsage();
-  }
-
-  Future> _loadUsage() async {
+  Future _loadUsage() async {
     final client = Supabase.instance.client;
     int totalRows = 0;
     int storageBytes = 0;
@@ -434,7 +428,6 @@ class _DrawerSupabaseQuotaMeterState extends State<_DrawerSupabaseQuotaMeter> {
       }
     } catch (_) {}
 
-    // Supabase Free Tier reference caps: 500 MB DB, 1024 MB Storage
     const freeDbCapMb = 500.0;
     const freeStorageCapMb = 1024.0;
     final estimatedDbMb = (totalRows * 0.025).clamp(0.2, freeDbCapMb);
@@ -454,7 +447,7 @@ class _DrawerSupabaseQuotaMeterState extends State<_DrawerSupabaseQuotaMeter> {
     };
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     if (!widget.expanded) {
       return const Padding(
