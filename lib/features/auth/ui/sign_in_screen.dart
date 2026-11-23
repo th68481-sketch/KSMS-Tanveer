@@ -37,7 +37,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await ref.read(authRepositoryProvider).signIn(_email.text.trim(), _password.text);
     } catch (e) {
       if (mounted) {
-        showSnack(context, AppLocalizations.of(context)!.auth_signInFailed, error: true);
+        final msg = e.toString().replaceFirst("AuthException(message: ", "").split(", statusCode:").first;
+        showSnack(context, msg, error: true);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
