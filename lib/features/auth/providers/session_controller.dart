@@ -226,7 +226,7 @@ class SessionController extends AsyncNotifier<SessionState> {
             roleKey: UserRole.platformSuperAdmin.key,
           ),
         ],
-        permissions: Permissions.all,
+        permissions: Permissions.all.toSet(),
         error: e.toString(),
       );
     }
