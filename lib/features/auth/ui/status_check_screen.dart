@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -100,8 +101,26 @@ class _StatusCheckScreenState extends ConsumerState<StatusCheckScreen> {
                             Text(_result!['institution_name'] as String,
                                 style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: KsmsSpacing.xs),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Ref: ${(_result!['reference_code'] ?? _result!['id'] ?? _ref.text.trim())}',
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.copy, size: 18),
+                                onPressed: () {
+                                  final code = (_result!['reference_code'] ?? _result!['id'] ?? _ref.text.trim()).toString();
+                                  Clipboard.setData(ClipboardData(text: code));
+                                  showSnack(context, 'Reference copied!');
+                                },
+                              ),
+                            ],
+                          ),
                           Text(
-                            '${(_result!['submitted_at'] as String?)?.substring(0, 10) ?? ''}',
+                            'Submitted: ${(_result!['submitted_at']?.toString() ?? '').length >= 10 ? _result!['submitted_at'].toString().substring(0, 10) : (_result!['submitted_at']?.toString() ?? '')}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           if (_result!['decision_reason'] != null) ...[

@@ -118,6 +118,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.verified_user_outlined),
+                  title: const Text('Developed by Tanveer Hussain'),
+                  subtitle: Text(
+                    'KSMS Platform · Role: ${role?.key ?? 'USER'} · Session: ${session?.phase.name ?? 'active'}',
+                  ),
+                ),
+              ),
             ],
           ),
         ),

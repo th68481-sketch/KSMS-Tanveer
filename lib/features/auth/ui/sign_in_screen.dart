@@ -72,7 +72,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 padding: const EdgeInsets.all(KsmsSpacing.xl),
                 child: Form(
                   key: _formKey,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  autovalidateMode: AutovalidateMode.disabled,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,

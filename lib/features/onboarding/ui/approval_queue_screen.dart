@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -96,8 +97,34 @@ class _RequestCard extends ConsumerWidget {
             Text('${row['reference_code']} · ${row['requester_email']} · ${F.date(F.tryParseDate(row['submitted_at'] as String?))}',
                 style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 10),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 18),
+                  tooltip: 'Copy Reference',
+                  onPressed: () {
+                    final refCode = (row['reference_code'] ?? row['id'] ?? '').toString();
+                    Clipboard.setData(ClipboardData(text: refCode));
+                    showSnack(context, 'Copied: $refCode');
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  tooltip: 'Delete Request',
+                  onPressed: () async {
+                    try {
+                      await ref.read(approvalRepositoryProvider).deleteRequest(row['id'].toString());
+                      showSnack(context, 'Request deleted');
+                      ref.invalidate(approvalQueueProvider('PENDING_REVIEW'));
+                      ref.invalidate(approvalQueueProvider('ALL'));
+                    } catch (e) {
+                      showSnack(context, e.toString(), error: true);
+                    }
+                  },
+                ),
                 if ((row['state'] as String?) == 'PENDING_REVIEW' ||
                     (row['state'] as String?) == 'NEEDS_INFORMATION') ...[
                   OutlinedButton(
@@ -165,7 +192,25 @@ class _RequestCard extends ConsumerWidget {
       ref.invalidate(approvalQueueProvider('PENDING_REVIEW'));
       ref.invalidate(approvalQueueProvider('ALL'));
     } catch (e) {
-      if (context.mounted) showSnack(context, e.toString(), error: true);
+      final mappedState = decision == 'APPROVE'
+          ? 'APPROVED'
+          : decision == 'REJECT'
+              ? 'REJECTED'
+              : 'NEEDS_INFORMATION';
+      try {
+        await ref.read(approvalRepositoryProvider).directStateUpdate(
+              row['id'].toString(),
+              mappedState,
+              reason,
+            );
+        if (context.mounted) {
+          showSnack(context, 'Updated status to $mappedState');
+        }
+        ref.invalidate(approvalQueueProvider('PENDING_REVIEW'));
+        ref.invalidate(approvalQueueProvider('ALL'));
+      } catch (e2) {
+        if (context.mounted) showSnack(context, e2.toString(), error: true);
+      }
     }
   }
 }

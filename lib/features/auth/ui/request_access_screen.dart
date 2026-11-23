@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,6 +59,72 @@ class _RequestAccessScreenState extends ConsumerState<RequestAccessScreen> {
     super.dispose();
   }
 
+  Future<void> _showRefDialog(String requestId, String email) async {
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Request Submitted'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Save or copy your reference code to track approval status:'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SelectableText(
+                      requestId,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy),
+                    tooltip: 'Copy Reference',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: requestId));
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('Reference code copied!')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text('Email: $email', style: Theme.of(ctx).textTheme.bodySmall),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: requestId));
+              Navigator.pop(ctx);
+              context.go(Routes.statusCheck);
+            },
+            child: const Text('Copy & Check Status'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.go(Routes.statusCheck);
+            },
+            child: const Text('Check Status'),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   Future<void> _pickFiles() async {
     final res = await FilePicker.platform.pickFiles(
       allowMultiple: true,
@@ -108,8 +175,7 @@ class _RequestAccessScreenState extends ConsumerState<RequestAccessScreen> {
         );
       }
       if (mounted) {
-        showSnack(context, '${AppLocalizations.of(context)!.req_submitted}: $requestId');
-        context.go(Routes.statusCheck);
+        await _showRefDialog(requestId, _email.text.trim());
       }
     } catch (e) {
       if (mounted) showSnack(context, e.toString(), error: true);
@@ -143,8 +209,7 @@ class _RequestAccessScreenState extends ConsumerState<RequestAccessScreen> {
         );
       }
       if (mounted) {
-        showSnack(context, '${AppLocalizations.of(context)!.req_submitted}: $requestId');
-        context.go(Routes.statusCheck);
+        await _showRefDialog(requestId, _email.text.trim());
       }
     } catch (e) {
       if (mounted) showSnack(context, e.toString(), error: true);
@@ -192,7 +257,7 @@ class _RequestAccessScreenState extends ConsumerState<RequestAccessScreen> {
   Widget _schoolForm(AppLocalizations l) {
     return Form(
       key: _formKey,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
+      autovalidateMode: AutovalidateMode.disabled,
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: KsmsSpacing.md),
         child: Column(
@@ -275,7 +340,7 @@ class _RequestAccessScreenState extends ConsumerState<RequestAccessScreen> {
   Widget _staffForm(AppLocalizations l) {
     return Form(
       key: _staffFormKey,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
+      autovalidateMode: AutovalidateMode.disabled,
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: KsmsSpacing.md),
         child: Column(
