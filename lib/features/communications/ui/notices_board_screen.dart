@@ -12,7 +12,7 @@ class _NoticesBoardScreenState extends ConsumerState {
   var _q = '';
   late final _f = Supabase.instance.client.from('notices').select().limit(50);
   @override Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Notices & Headlines'), actions: [Padding(padding: const EdgeInsets.only(right: 12), child: FilledButton.icon(onPressed: () => context.push(Routes.noticesCompose), icon: const Icon(Icons.add, size: 18), label: const Text('New Headline')))]),
+    appBar: AppBar(title: const Text('Notices & Headlines'), actions: [Padding(padding: const EdgeInsets.only(right: 12), child: FilledButton.icon(onPressed: () => context.push('/school/notices/compose'), icon: const Icon(Icons.add, size: 18), label: const Text('New Headline')))]),
     body: FutureBuilder(future: _f, builder: (context, snap) {
       final all = snap.data is List ? List.of(snap.data as List) : const [];
       final list = _q.isEmpty ? all : all.where((r) => r.toString().toLowerCase().contains(_q)).toList();

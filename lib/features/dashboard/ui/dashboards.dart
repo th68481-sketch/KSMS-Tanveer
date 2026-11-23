@@ -23,10 +23,10 @@ class SchoolDashboard extends ConsumerWidget {
         final pct = attT > 0 ? (attP / attT * 100) : null;
         return GridView.count(crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 2.0, children: [
           InkWell(onTap: () => context.push(Routes.students), child: StatCard(label: l.dash_studentsActive, value: F.intFmt((k['students'] is int) ? k['students'] as int : 0), icon: Icons.groups, tone: KsmsColors.navy700)),
-          InkWell(onTap: () => context.push(Routes.staff), child: StatCard(label: l.dash_staffActive, value: F.intFmt((k['staff'] is int) ? k['staff'] as int : 0), icon: Icons.badge, tone: KsmsColors.teal600)),
+          InkWell(onTap: () => context.push(Routes.hr), child: StatCard(label: l.dash_staffActive, value: F.intFmt((k['staff'] is int) ? k['staff'] as int : 0), icon: Icons.badge, tone: KsmsColors.teal600)),
           InkWell(onTap: () => context.push(Routes.attendance), child: StatCard(label: l.dash_attendanceToday, value: pct == null ? '-' : '${pct.toStringAsFixed(1)}%', icon: Icons.fact_check, tone: KsmsColors.info, subtitle: '$attP / $attT')),
-          InkWell(onTap: () => context.push(Routes.fees), child: StatCard(label: l.dash_feesDue, value: F.pkr((k['feesDue'] is num) ? (k['feesDue'] as num).toDouble() : 0.0), icon: Icons.request_quote, tone: KsmsColors.warning)),
-          InkWell(onTap: () => context.push(Routes.leaves), child: StatCard(label: l.dash_pendingLeaves, value: '${k['pendingLeaves'] ?? 0}', icon: Icons.beach_access, tone: KsmsColors.danger)),
+          InkWell(onTap: () => context.push(Routes.finance), child: StatCard(label: l.dash_feesDue, value: F.pkr((k['feesDue'] is num) ? (k['feesDue'] as num).toDouble() : 0.0), icon: Icons.request_quote, tone: KsmsColors.warning)),
+          InkWell(onTap: () => context.push(Routes.leave), child: StatCard(label: l.dash_pendingLeaves, value: '${k['pendingLeaves'] ?? 0}', icon: Icons.beach_access, tone: KsmsColors.danger)),
           InkWell(onTap: () => context.push(Routes.homework), child: StatCard(label: l.dash_quickActions, value: '${k['homeworkDueToday'] ?? 0}', icon: Icons.menu_book, tone: KsmsColors.teal600, subtitle: l.hw_title)),
         ]);
       }),
@@ -42,11 +42,11 @@ class PlatformDashboard extends ConsumerWidget {
       AsyncView(value: ref.watch(platformDashboardProvider), onRetry: () => ref.invalidate(platformDashboardProvider), builder: (context, raw) {
         final k = raw is Map ? Map.of(raw as Map) : const {};
         return GridView.count(crossAxisCount: MediaQuery.of(context).size.width > 1000 ? 5 : 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 2.0, children: [
-          InkWell(onTap: () => context.go(Routes.tenants), child: StatCard(label: l.dash_privateSchools, value: '${k['private'] ?? 0}', icon: Icons.domain)),
-          InkWell(onTap: () => context.go(Routes.tenants), child: StatCard(label: l.dash_govSchools, value: '${k['government'] ?? 0}', icon: Icons.account_balance)),
-          InkWell(onTap: () => context.go(Routes.campuses), child: StatCard(label: l.dash_campuses, value: '${k['campuses'] ?? 0}', icon: Icons.location_city)),
-          InkWell(onTap: () => context.go(Routes.approvals), child: StatCard(label: l.dash_pendingRequests, value: '${k['pendingRequests'] ?? 0}', icon: Icons.approval, tone: KsmsColors.warning)),
-          InkWell(onTap: () => context.go(Routes.tenants), child: StatCard(label: l.dash_suspended, value: '${k['suspended'] ?? 0}', icon: Icons.pause_circle, tone: KsmsColors.danger)),
+          InkWell(onTap: () => context.go(Routes.adminTenants), child: StatCard(label: l.dash_privateSchools, value: '${k['private'] ?? 0}', icon: Icons.domain)),
+          InkWell(onTap: () => context.go(Routes.adminTenants), child: StatCard(label: l.dash_govSchools, value: '${k['government'] ?? 0}', icon: Icons.account_balance)),
+          InkWell(onTap: () => context.go(Routes.govRegistry), child: StatCard(label: l.dash_campuses, value: '${k['campuses'] ?? 0}', icon: Icons.location_city)),
+          InkWell(onTap: () => context.go(Routes.adminApprovals), child: StatCard(label: l.dash_pendingRequests, value: '${k['pendingRequests'] ?? 0}', icon: Icons.approval, tone: KsmsColors.warning)),
+          InkWell(onTap: () => context.go(Routes.adminTenants), child: StatCard(label: l.dash_suspended, value: '${k['suspended'] ?? 0}', icon: Icons.pause_circle, tone: KsmsColors.danger)),
         ]);
       }),
     ]);
@@ -61,9 +61,9 @@ class GovDashboard extends ConsumerWidget {
       AsyncView(value: ref.watch(govDashboardProvider), onRetry: () => ref.invalidate(govDashboardProvider), builder: (context, raw) {
         final k = raw is Map ? Map.of(raw as Map) : const {};
         return GridView.count(crossAxisCount: MediaQuery.of(context).size.width > 1000 ? 3 : 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 2.0, children: [
-          InkWell(onTap: () => context.go(Routes.registry), child: StatCard(label: l.nav_registry, value: '${k['schools'] ?? 0}', icon: Icons.account_balance)),
+          InkWell(onTap: () => context.go(Routes.govRegistry), child: StatCard(label: l.nav_registry, value: '${k['schools'] ?? 0}', icon: Icons.account_balance)),
           InkWell(onTap: () => context.go(Routes.students), child: StatCard(label: l.dash_studentsActive, value: '${k['students'] ?? 0}', icon: Icons.groups)),
-          InkWell(onTap: () => context.go(Routes.approvals), child: StatCard(label: l.dash_pendingRequests, value: '${k['pendingRequests'] ?? 0}', icon: Icons.approval, tone: KsmsColors.warning)),
+          InkWell(onTap: () => context.go(Routes.adminApprovals), child: StatCard(label: l.dash_pendingRequests, value: '${k['pendingRequests'] ?? 0}', icon: Icons.approval, tone: KsmsColors.warning)),
         ]);
       }),
     ]);

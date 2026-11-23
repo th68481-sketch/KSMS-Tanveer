@@ -59,6 +59,7 @@ final routerProvider = Provider((ref) {
           GoRoute(path: Routes.adminTenants, builder: (_, __) => const TenantsScreen()),
           GoRoute(path: Routes.govRegistry, builder: (_, __) => const PlaceholderScreen(title: 'Gov Registry')),
           GoRoute(path: Routes.students, builder: (_, __) => const StudentDirectoryScreen()),
+          GoRoute(path: '/school/students/:id', builder: (_, state) => StudentProfileScreen(studentId: state.pathParameters['id']!)),
           GoRoute(path: Routes.admissions, builder: (_, __) => const PlaceholderScreen(title: 'Admissions')),
           GoRoute(path: Routes.academics, builder: (_, __) => const AcademicSetupScreen()),
           GoRoute(path: Routes.assignments, builder: (_, __) => const PlaceholderScreen(title: 'Assignments')),
@@ -80,7 +81,7 @@ final routerProvider = Provider((ref) {
           GoRoute(path: Routes.transport, builder: (_, __) => const PlaceholderScreen(title: 'Transport')),
           GoRoute(path: Routes.inventory, builder: (_, __) => const PlaceholderScreen(title: 'Inventory')),
           GoRoute(path: Routes.notices, builder: (_, __) => const NoticesBoardScreen()),
-          GoRoute(path: Routes.noticesCompose, builder: (_, __) => const NoticesComposeScreen()),
+          GoRoute(path: '/school/notices/compose', builder: (_, __) => const NoticesComposeScreen()),
           GoRoute(path: Routes.notifications, builder: (_, __) => const NotificationsScreen()),
           GoRoute(path: Routes.reports, builder: (_, __) => const PlaceholderScreen(title: 'Reports Center')),
           GoRoute(path: Routes.audit, builder: (_, __) => const PlaceholderScreen(title: 'Audit Log Viewer')),
@@ -95,10 +96,10 @@ final routerProvider = Provider((ref) {
 class PlaceholderScreen extends StatefulWidget {
   const PlaceholderScreen({super.key, required this.title});
   final String title;
-  @override State createState() => _PlaceholderScreenState();
+  @override State\x3cPlaceholderScreen\x3e createState() => _PlaceholderScreenState();
 }
 
-class _PlaceholderScreenState extends State {
+class _PlaceholderScreenState extends State\x3cPlaceholderScreen\x3e {
   var _search = '';
   var _settingsSection = 0;
   String _tableForTitle() {
@@ -212,6 +213,7 @@ class NotificationsScreen extends ConsumerWidget {
                 title: Text((n['title'] ?? '').toString()),
                 subtitle: Text((n['body'] ?? '').toString()),
                 trailing: Text(F.date(DateTime.tryParse((n['created_at'] ?? '').toString()))),
+                onTap: () { if (!read && n['id'] != null) ref.read(notificationsProvider.notifier).markRead(n['id']); },
               );
             },
           );
