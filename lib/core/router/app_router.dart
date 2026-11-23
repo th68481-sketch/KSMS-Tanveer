@@ -203,7 +203,7 @@ class PlaceholderScreen extends StatelessWidget {
                   );
                 }
                 final raw = snap.data;
-                final rows = raw is List ? List.from(raw) : [];
+                final rows = raw != null ? List.of(raw) : const [];
                 if (rows.isEmpty) {
                   return Card(
                     child: Center(
@@ -218,7 +218,7 @@ class PlaceholderScreen extends StatelessWidget {
                   itemCount: rows.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, i) {
-                    final r = Map.from(rows[i] as Map);
+                    final r = Map.of(rows[i]);
                     final primary = (r['name'] ??
                             r['title'] ??
                             r['full_name'] ??
