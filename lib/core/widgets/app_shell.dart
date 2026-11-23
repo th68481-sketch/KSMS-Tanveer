@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ksms/core/widgets/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -301,6 +302,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             ],
           ),
         ),
+        _DrawerSupabaseQuotaMeter(expanded: expanded),
         if (_showSidebar)
           IconButton(
             onPressed: () => setState(() => _expanded = !_expanded),
@@ -366,6 +368,177 @@ class _NavTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+class _DrawerSupabaseQuotaMeter extends StatefulWidget {
+  const _DrawerSupabaseQuotaMeter({required this.expanded});
+  final bool expanded;
+
+  @override
+  State<_DrawerSupabaseQuotaMeter> createState() => _DrawerSupabaseQuotaMeterState();
+}
+
+class _DrawerSupabaseQuotaMeterState extends State<_DrawerSupabaseQuotaMeter> {
+  late Future> _usageFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _usageFuture = _loadUsage();
+  }
+
+  Future> _loadUsage() async {
+    final client = Supabase.instance.client;
+    int totalRows = 0;
+    int storageBytes = 0;
+    int userCount = 0;
+
+    final tables = [
+      'profiles',
+      'tenants',
+      'campuses',
+      'students',
+      'admissions',
+      'invoices',
+      'attendance_sessions',
+      'staff',
+      'notices',
+      'audit_events',
+    ];
+
+    for (final t in tables) {
+      try {
+        final rows = await client.from(t).select('id').limit(200);
+        if (rows is List) {
+          totalRows += rows.length;
+          if (t == 'profiles') userCount = rows.length;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      final buckets = await client.storage.listBuckets();
+      for (final b in buckets) {
+        try {
+          final files = await client.storage.from(b.name).list();
+          for (final item in files) {
+            final meta = item.metadata;
+            if (meta != null && meta['size'] != null) {
+              storageBytes += int.tryParse(meta['size'].toString()) ?? 0;
+            }
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+
+    // Supabase Free Tier reference caps: 500 MB DB, 1024 MB Storage
+    const freeDbCapMb = 500.0;
+    const freeStorageCapMb = 1024.0;
+    final estimatedDbMb = (totalRows * 0.025).clamp(0.2, freeDbCapMb);
+    final storageMb = storageBytes / (1024 * 1024);
+    final dbRatio = (estimatedDbMb / freeDbCapMb).clamp(0.01, 1.0);
+    final storageRatio = (storageMb / freeStorageCapMb).clamp(0.005, 1.0);
+    final balanceDbMb = (freeDbCapMb - estimatedDbMb).clamp(0.0, freeDbCapMb);
+
+    return {
+      'totalRows': totalRows,
+      'userCount': userCount,
+      'estimatedDbMb': estimatedDbMb,
+      'balanceDbMb': balanceDbMb,
+      'dbRatio': dbRatio,
+      'storageMb': storageMb,
+      'storageRatio': storageRatio,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.expanded) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Tooltip(
+          message: 'Supabase Free Quota (500 MB DB / 1 GB Storage)',
+          child: Icon(Icons.cloud_done_outlined, size: 18, color: KsmsColors.teal400),
+        ),
+      );
+    }
+
+    return FutureBuilder(
+      future: _usageFuture,
+      builder: (context, snap) {
+        final d = snap.data is Map ? Map.from(snap.data as Map) : const {};
+        final double dbRatio = (d['dbRatio'] is num) ? (d['dbRatio'] as num).toDouble() : 0.04;
+        final double usedDb = (d['estimatedDbMb'] is num) ? (d['estimatedDbMb'] as num).toDouble() : 0.5;
+        final double balDb = (d['balanceDbMb'] is num) ? (d['balanceDbMb'] as num).toDouble() : 499.5;
+        final double usedStorage = (d['storageMb'] is num) ? (d['storageMb'] as num).toDouble() : 0.0;
+        final int rowsCount = (d['totalRows'] is int) ? d['totalRows'] as int : 0;
+        final int usersCount = (d['userCount'] is int) ? d['userCount'] as int : 0;
+
+        return Container(
+          margin: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.06),
+            borderRadius: KsmsRadii.sm,
+            border: Border.all(color: Colors.white.withOpacity(0.10)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.storage_rounded, size: 14, color: KsmsColors.teal400),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text(
+                      'Supabase Free Space',
+                      style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  Text(
+                    '500 MB',
+                    style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 10.5),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: dbRatio,
+                  minHeight: 6,
+                  backgroundColor: Colors.white.withOpacity(0.14),
+                  valueColor: const AlwaysStoppedAnimation<Color>(KsmsColors.teal400),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Used ~${usedDb.toStringAsFixed(1)} MB',
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10),
+                  ),
+                  Text(
+                    'Bal ~${balDb.toStringAsFixed(0)} MB',
+                    style: const TextStyle(color: KsmsColors.teal400, fontSize: 10, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Storage: ${usedStorage.toStringAsFixed(2)} MB / 1 GB • Recs: $rowsCount • Users: $usersCount',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 9.5),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

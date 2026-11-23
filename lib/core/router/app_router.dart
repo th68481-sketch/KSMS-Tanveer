@@ -104,12 +104,20 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class PlaceholderScreen extends StatelessWidget {
+class PlaceholderScreen extends StatefulWidget {
   const PlaceholderScreen({super.key, required this.title});
   final String title;
 
+  @override
+  State<PlaceholderScreen> createState() => _PlaceholderScreenState();
+}
+
+class _PlaceholderScreenState extends State<PlaceholderScreen> {
+  String _search = '';
+  int _settingsSection = 0; // 0: Preferences, 1: Roles & Matrix, 2: Space & Users
+
   String _tableForTitle() {
-    switch (title.toLowerCase()) {
+    switch (widget.title.toLowerCase()) {
       case 'tenants':
         return 'tenants';
       case 'gov registry':
@@ -162,6 +170,177 @@ class PlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSettings = widget.title.toLowerCase() == 'settings & matrix';
+    if (isSettings) {
+      return _buildProfessionalSettings(context);
+    }
+    return _buildProModuleView(context);
+  }
+
+  Widget _buildProfessionalSettings(BuildContext context) {
+    final client = Supabase.instance.client;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('System Settings & Access Matrix',
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 4),
+                  Text('Configure workspace preferences, role matrix, and Supabase quota breakdown',
+                      style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
+            const Chip(label: Text('Pro Workspace')),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ChoiceChip(
+              label: const Text('General & Preferences'),
+              selected: _settingsSection == 0,
+              onSelected: (_) => setState(() => _settingsSection = 0),
+            ),
+            ChoiceChip(
+              label: const Text('Roles & Permissions'),
+              selected: _settingsSection == 1,
+              onSelected: (_) => setState(() => _settingsSection = 1),
+            ),
+            ChoiceChip(
+              label: const Text('Space & User Data'),
+              selected: _settingsSection == 2,
+              onSelected: (_) => setState(() => _settingsSection = 2),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (_settingsSection == 0) ...[
+          Card(
+            child: Column(
+              children: const [
+                ListTile(
+                  leading: Icon(Icons.school_outlined, color: KsmsColors.teal600),
+                  title: Text('Karachi School Management System (KSMS)'),
+                  subtitle: Text('Multi-tenant & Multi-campus Academic + Finance + HR Suite'),
+                  trailing: Chip(label: Text('Active')),
+                ),
+                Divider(height: 1),
+                ListTile(
+                  leading: Icon(Icons.translate, color: KsmsColors.teal600),
+                  title: Text('Localization & RTL Support'),
+                  subtitle: Text('Use top bar language toggle to switch between English and اردو'),
+                ),
+                Divider(height: 1),
+                ListTile(
+                  leading: Icon(Icons.dark_mode_outlined, color: KsmsColors.teal600),
+                  title: Text('Appearance & Contrast Mode'),
+                  subtitle: Text('Use top bar theme icon to switch Light / Dark mode'),
+                ),
+                Divider(height: 1),
+                ListTile(
+                  leading: Icon(Icons.speed_outlined, color: KsmsColors.teal600),
+                  title: Text('Query Optimization & Paging'),
+                  subtitle: Text('Bounded record fetching active for faster web & mobile rendering'),
+                ),
+              ],
+            ),
+          ),
+        ] else if (_settingsSection == 1) ...[
+          FutureBuilder(
+            future: client.from('roles').select().limit(50),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()));
+              }
+              if (snap.hasError) {
+                return Card(child: Padding(padding: const EdgeInsets.all(16), child: Text('Error: ${snap.error}')));
+              }
+              final rows = snap.data != null ? List.of(snap.data as List) : [];
+              if (rows.isEmpty) {
+                return const Card(child: Padding(padding: EdgeInsets.all(20), child: Text('No roles configured yet.')));
+              }
+              return Column(
+                children: [
+                  for (final item in rows)
+                    Builder(builder: (context) {
+                      final r = Map.of(item as Map);
+                      final label = (r['label'] ?? r['name'] ?? r['role_key'] ?? r['key'] ?? 'Role').toString();
+                      final scope = (r['scope'] ?? 'SYSTEM').toString();
+                      final key = (r['key'] ?? r['role_key'] ?? '').toString();
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: const CircleAvatar(child: Icon(Icons.admin_panel_settings_outlined)),
+                          title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(key.isEmpty ? 'Role policy active' : 'Role Key: $key'),
+                          trailing: Chip(label: Text(scope)),
+                        ),
+                      );
+                    }),
+                ],
+              );
+            },
+          ),
+        ] else ...[
+          FutureBuilder(
+            future: client.from('profiles').select().limit(50),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()));
+              }
+              if (snap.hasError) {
+                return Card(child: Padding(padding: const EdgeInsets.all(16), child: Text('Error: ${snap.error}')));
+              }
+              final users = snap.data != null ? List.of(snap.data as List) : [];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(14),
+                      child: Text(
+                        'Supabase Free Plan Reference: 500 MB Database • 1 GB Storage • 50k MAU. '
+                        'Per-user exact disk bytes require Postgres admin stats; user accounts & records are listed below:',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (users.isEmpty)
+                    const Card(child: Padding(padding: EdgeInsets.all(20), child: Text('No user profiles found.')))
+                  else
+                    for (var i = 0; i < users.length; i++)
+                      Builder(builder: (context) {
+                        final u = Map.of(users[i] as Map);
+                        final name = (u['full_name'] ?? u['email'] ?? u['id'] ?? 'User #${i + 1}').toString();
+                        final email = (u['email'] ?? u['role'] ?? 'Active member').toString();
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: CircleAvatar(child: Text('${i + 1}')),
+                            title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: Text(email),
+                            trailing: const Chip(label: Text('Est. ~0.03 MB')),
+                          ),
+                        );
+                      }),
+                ],
+              );
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildProModuleView(BuildContext context) {
     final client = Supabase.instance.client;
     final table = _tableForTitle();
 
@@ -176,20 +355,28 @@ class PlaceholderScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 4),
-                    Text('Connected table: public.$table',
-                        style: Theme.of(context).textTheme.bodySmall),
+                    Text(widget.title, style: Theme.of(context).textTheme.headlineSmall),
+                    const SizedBox(height: 2),
+                    Text('Live Table: public.$table', style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),
               const Chip(label: Text('Live DB')),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          TextField(
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search),
+              hintText: 'Filter records...',
+              isDense: true,
+            ),
+            onChanged: (v) => setState(() => _search = v.trim().toLowerCase()),
+          ),
+          const SizedBox(height: 12),
           Expanded(
             child: FutureBuilder(
-              future: client.from(table).select().limit(50),
+              future: client.from(table).select().limit(30),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -203,22 +390,28 @@ class PlaceholderScreen extends StatelessWidget {
                   );
                 }
                 final raw = snap.data;
-                final rows = raw != null ? List.of(raw) : const [];
+                final allRows = raw != null ? List.of(raw as List) : [];
+                final rows = _search.isEmpty
+                    ? allRows
+                    : allRows.where((item) => item.toString().toLowerCase().contains(_search)).toList();
+
                 if (rows.isEmpty) {
                   return Card(
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Text('No records found in public.$table yet.'),
+                        child: Text(allRows.isEmpty
+                            ? 'No records found in public.$table yet.'
+                            : 'No matching records for "$_search".'),
                       ),
                     ),
                   );
                 }
                 return ListView.separated(
                   itemCount: rows.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, __) => const SizedBox(height: 6),
                   itemBuilder: (context, i) {
-                    final r = Map.of(rows[i]);
+                    final r = Map.of(rows[i] as Map);
                     final primary = (r['name'] ??
                             r['title'] ??
                             r['full_name'] ??
@@ -231,10 +424,15 @@ class PlaceholderScreen extends StatelessWidget {
                         .take(3)
                         .map((e) => '${e.key}: ${e.value}')
                         .join(' • ');
-                    return ListTile(
-                      leading: CircleAvatar(child: Text('${i + 1}')),
-                      title: Text(primary, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(secondary, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    return Card(
+                      child: ListTile(
+                        leading: CircleAvatar(child: Text('${i + 1}')),
+                        title: Text(primary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(secondary, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      ),
                     );
                   },
                 );
