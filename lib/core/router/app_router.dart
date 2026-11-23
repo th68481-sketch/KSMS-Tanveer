@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../constants/domain.dart';
 import 'route_paths.dart';
 import '../widgets/app_shell.dart';
 import '../../features/auth/providers/session_controller.dart';
