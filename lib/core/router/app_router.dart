@@ -188,10 +188,8 @@ class PlaceholderScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: FutureBuilder<List>>(
-              future: client.from(table).select().limit(50).then(
-                    (v) => List>.from(v),
-                  ),
+            child: FutureBuilder(
+              future: client.from(table).select().limit(50),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -204,7 +202,8 @@ class PlaceholderScreen extends StatelessWidget {
                     ),
                   );
                 }
-                final rows = snap.data ?? const [];
+                final raw = snap.data;
+                final rows = raw is List ? raw.cast>() : const >[];
                 if (rows.isEmpty) {
                   return Card(
                     child: Center(
