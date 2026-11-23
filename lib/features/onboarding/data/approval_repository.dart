@@ -58,4 +58,17 @@ final approvalRepositoryProvider =
 final approvalQueueProvider = FutureProvider.autoDispose
     .family<List<Map<String, dynamic>>, String>((ref, state) {
   return ref.watch(approvalRepositoryProvider).listRequests(state: state);
-});
+
+  Future<void> deleteRequest(String requestId) async {
+    await _client.from('access_requests').delete().eq('id', requestId);
+  }
+
+  Future<void> directStateUpdate(String requestId, String nextState, String reason) async {
+    await _client.from('access_requests').update({
+      'state': nextState,
+      'decision_reason': reason,
+    }).eq('id', requestId);
+  }
+}
+
+);
