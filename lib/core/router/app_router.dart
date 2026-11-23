@@ -105,7 +105,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class PlaceholderScreen extends ConsumerWidget {
+class PlaceholderScreen extends StatelessWidget {
   const PlaceholderScreen({super.key, required this.title});
   final String title;
 
@@ -162,8 +162,8 @@ class PlaceholderScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final client = ref.watch(supabaseProvider);
+  Widget build(BuildContext context) {
+    final client = Supabase.instance.client;
     final table = _tableForTitle();
 
     return Padding(
@@ -184,7 +184,7 @@ class PlaceholderScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              Chip(label: const Text('Live DB')),
+              const Chip(label: Text('Live DB')),
             ],
           ),
           const SizedBox(height: 16),
