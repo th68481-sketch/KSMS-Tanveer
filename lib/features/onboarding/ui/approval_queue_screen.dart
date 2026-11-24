@@ -8,17 +8,17 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../data/approval_repository.dart';
 class ApprovalQueueScreen extends ConsumerStatefulWidget {
   const ApprovalQueueScreen({super.key});
-  @override ConsumerState\x3cApprovalQueueScreen\x3e createState() => _ApprovalQueueScreenState();
+  @override ConsumerState<ApprovalQueueScreen> createState() => _ApprovalQueueScreenState();
 }
-class _ApprovalQueueScreenState extends ConsumerState\x3cApprovalQueueScreen\x3e {
+class _ApprovalQueueScreenState extends ConsumerState<ApprovalQueueScreen> {
   var _state = 'PENDING_REVIEW';
   @override Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final requests = ref.watch(approvalQueueProvider(_state));
     return Scaffold(appBar: AppBar(title: Text(l.appr_title)), body: Column(children: [
       Padding(padding: const EdgeInsets.all(12), child: Wrap(spacing: 8, children: [
-        for (final s in const ['PENDING_REVIEW', 'NEEDS_INFORMATION', 'APPROVED', 'REJECTED', 'ALL'])
-          ChoiceChip(label: Text(F.humanize(s)), selected: _state == s, onSelected: (_) => setState(() => _state = s)),
+        for (final st in const ['PENDING_REVIEW', 'NEEDS_INFORMATION', 'APPROVED', 'REJECTED', 'ALL'])
+          ChoiceChip(label: Text(F.humanize(st)), selected: _state == st, onSelected: (_) => setState(() => _state = st)),
       ])),
       Expanded(child: AsyncView(value: requests, onRetry: () => ref.invalidate(approvalQueueProvider(_state)), isEmpty: (rows) => (rows as List).isEmpty, builder: (context, rows) {
         final list = List.of(rows as List);
