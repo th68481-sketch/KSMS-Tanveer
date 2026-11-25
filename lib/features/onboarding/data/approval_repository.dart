@@ -30,8 +30,14 @@ class ApprovalRepository {
   }
 
   Future decide({required var requestId, required var decision, required var reason}) async {
-    final res = await _client.functions.invoke('provision-approval', body: {'request_id': requestId, 'decision': decision, 'reason': reason});
-    return res.data is Map ? Map.of(res.data as Map) : null;
+    await _client.schema('app').rpc(
+      'record_approval',
+      params: {
+        'p_request': requestId.toString(),
+        'p_decision': decision.toString(),
+        'p_reason': reason.toString(),
+      },
+    );
   }
 
   Future deleteRequest(var requestId) async {

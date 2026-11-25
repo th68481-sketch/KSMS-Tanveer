@@ -93,13 +93,13 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
   List<String> _extractDocCandidates(Map row) {
     final out = <String>[];
     for (final k in const [
+      'evidence_paths',
+      'document_paths',
       'document_url',
       'doc_url',
       'drive_url',
       'attachment_url',
       'documents',
-      'document_paths',
-      'evidence_paths',
       'storage_path',
       'file_path',
     ]) {
@@ -156,18 +156,18 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
       }
     }
     await Clipboard.setData(ClipboardData(text: target));
-    if (mounted) {
-      showSnack(context, 'Document path copied: $target');
-    }
+    if (mounted) showSnack(context, 'Document reference copied: $target');
   }
 
   Future<void> _emitNotification(String title, String body) async {
     try {
       final db = Supabase.instance.client;
+      final uid = db.auth.currentUser?.id;
+      if (uid == null) return;
       await db.from('notifications').insert({
+        'user_id': uid,
         'title': title,
         'body': body,
-        'user_id': db.auth.currentUser?.id,
       });
     } catch (_) {}
   }
@@ -304,16 +304,9 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
       await ref.read(approvalRepositoryProvider).deleteRequest(reqId);
       await _emitNotification('Request Deleted', 'Removed request $refCode');
       if (mounted) showSnack(context, 'Deleted: $refCode');
-    } catch (e1) {
-      try {
-        await Supabase.instance.client.from('approval_actions').delete().eq('access_request_id', reqId);
-        await Supabase.instance.client.from('access_requests').delete().eq('id', reqId);
-        await _emitNotification('Request Deleted', 'Removed request $refCode');
-        if (mounted) showSnack(context, 'Deleted: $refCode');
-      } catch (e2) {
-        if (mounted) {
-          showSnack(context, 'Delete error: ${e2.toString()}', error: true);
-        }
+    } catch (e) {
+      if (mounted) {
+        showSnack(context, 'Delete failed: ${e.toString()}', error: true);
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -357,7 +350,6 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
     final nextState = decision == 'APPROVE'
         ? 'APPROVED'
         : (decision == 'REJECT' ? 'REJECTED' : 'NEEDS_INFORMATION');
-    String lastErr = '';
 
     try {
       await ref.read(approvalRepositoryProvider).decide(
@@ -367,31 +359,9 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
           );
       await _emitNotification('Request $nextState ($refCode)', reason);
       if (mounted) showSnack(context, 'Submitted: $nextState');
-      if (mounted) setState(() => _submitting = false);
-      _refreshAll();
-      return;
     } catch (e) {
-      lastErr = e.toString();
-    }
-
-    try {
-      await ref.read(approvalRepositoryProvider).directStateUpdate(reqId, nextState, reason);
-      await _emitNotification('Request $nextState ($refCode)', reason);
-      if (mounted) showSnack(context, 'Updated: $nextState');
-    } catch (e2) {
-      lastErr = e2.toString();
-      try {
-        await Supabase.instance.client
-            .from('access_requests')
-            .update({'state': nextState, 'decision_reason': reason})
-            .eq('id', reqId);
-        await _emitNotification('Request $nextState ($refCode)', reason);
-        if (mounted) showSnack(context, 'Saved: $nextState');
-      } catch (e3) {
-        lastErr = e3.toString();
-        if (mounted) {
-          showSnack(context, 'Submit failed: $lastErr', error: true);
-        }
+      if (mounted) {
+        showSnack(context, 'Approval error: ${e.toString()}', error: true);
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
