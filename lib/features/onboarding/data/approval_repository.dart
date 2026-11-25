@@ -41,7 +41,10 @@ class ApprovalRepository {
   }
 
   Future deleteRequest(var requestId) async {
-    await _client.from('access_requests').delete().eq('id', requestId);
+    await _client.schema('app').rpc(
+      'delete_access_request',
+      params: {'p_request': requestId.toString()},
+    );
   }
 
   Future directStateUpdate(var requestId, var nextState, var reason) async {
