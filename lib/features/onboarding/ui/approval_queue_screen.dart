@@ -81,12 +81,83 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
   var _submitting = false;
   var _docsVerified = false;
 
-  void _refreshAll(WidgetRef ref) {
+  void _refreshAll() {
     for (final s in const ['PENDING_REVIEW', 'NEEDS_INFORMATION', 'APPROVED', 'REJECTED', 'ALL']) {
       ref.invalidate(approvalQueueProvider(s));
     }
     if (!const ['PENDING_REVIEW', 'NEEDS_INFORMATION', 'APPROVED', 'REJECTED', 'ALL'].contains(widget.activeFilter)) {
       ref.invalidate(approvalQueueProvider(widget.activeFilter));
+    }
+  }
+
+  List<String> _extractDocCandidates(Map row) {
+    final out = <String>[];
+    for (final k in const [
+      'document_url',
+      'doc_url',
+      'drive_url',
+      'attachment_url',
+      'documents',
+      'document_paths',
+      'evidence_paths',
+      'storage_path',
+      'file_path',
+    ]) {
+      final val = row[k];
+      if (val == null) continue;
+      if (val is List) {
+        for (final item in val) {
+          final s = item?.toString().trim() ?? '';
+          if (s.isNotEmpty && !out.contains(s)) out.add(s);
+        }
+      } else {
+        final s = val.toString().trim();
+        if (s.isNotEmpty && s != '[]' && s != '{}' && !out.contains(s)) out.add(s);
+      }
+    }
+    return out;
+  }
+
+  Future<List<String>> _resolveDocumentLinks(Map row) async {
+    final candidates = _extractDocCandidates(row);
+    final resolved = <String>[];
+    final storagePaths = <String>[];
+
+    for (final item in candidates) {
+      if (item.startsWith('http://') || item.startsWith('https://')) {
+        if (!resolved.contains(item)) resolved.add(item);
+      } else {
+        storagePaths.add(item);
+      }
+    }
+
+    if (storagePaths.isNotEmpty) {
+      try {
+        final signed = await ref.read(approvalRepositoryProvider).evidenceUrls(storagePaths);
+        for (final u in signed) {
+          final s = u?.toString().trim() ?? '';
+          if (s.isNotEmpty && !resolved.contains(s)) resolved.add(s);
+        }
+      } catch (_) {}
+    }
+
+    if (resolved.isEmpty && storagePaths.isNotEmpty) {
+      resolved.addAll(storagePaths);
+    }
+    return resolved;
+  }
+
+  Future<void> _openDocLink(String target) async {
+    if (target.startsWith('http://') || target.startsWith('https://')) {
+      final uri = Uri.tryParse(target);
+      if (uri != null) {
+        final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (ok) return;
+      }
+    }
+    await Clipboard.setData(ClipboardData(text: target));
+    if (mounted) {
+      showSnack(context, 'Document path copied: $target');
     }
   }
 
@@ -107,7 +178,8 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
     final name = (row['requester_name'] ?? row['institution_name'] ?? 'Applicant').toString();
     final email = (row['requester_email'] ?? '').toString();
     final role = (row['requested_role'] ?? row['kind'] ?? '').toString();
-    final docInfo = (row['document_url'] ?? row['documents'] ?? row['drive_url'] ?? 'Attached during onboarding / 15 GB Hybrid Drive').toString();
+    final docs = _extractDocCandidates(row).join(', ');
+    final docInfo = docs.isNotEmpty ? docs : 'Attached during onboarding / 15 GB Hybrid Drive';
     final subject = Uri.encodeComponent('KSMS Access Request [$refCode] - $name');
     final body = Uri.encodeComponent(
       'Official KSMS Access Request Details\n'
@@ -123,12 +195,11 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  void _openVerifyModal(BuildContext context, WidgetRef ref, Map row) {
+  void _openVerifyModal(Map row) {
     final refCode = (row['reference_code'] ?? row['id'] ?? '').toString();
     final name = (row['requester_name'] ?? row['institution_name'] ?? 'Applicant').toString();
     final email = (row['requester_email'] ?? '').toString();
     final role = (row['requested_role'] ?? row['kind'] ?? '').toString();
-    final docInfo = (row['document_url'] ?? row['documents'] ?? row['drive_url'] ?? 'Verification documents & 15 GB Hybrid Drive folder').toString();
 
     showModalBottomSheet(
       context: context,
@@ -142,13 +213,46 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
             children: [
               Text('Verify Request & Documents', style: Theme.of(ctx2).textTheme.titleLarge),
               const SizedBox(height: 10),
-              Text('Reference: $refCode'),
-              Text('Applicant / School: $name'),
-              Text('Email: $email'),
-              Text('Role / Type: $role'),
+              SelectableText('Reference: $refCode'),
+              SelectableText('Applicant / School: $name'),
+              SelectableText('Email: $email'),
+              SelectableText('Role / Type: $role'),
+              const SizedBox(height: 10),
+              FutureBuilder<List<String>>(
+                future: _resolveDocumentLinks(row),
+                builder: (c3, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: LinearProgressIndicator(),
+                    );
+                  }
+                  final links = snap.data ?? const <String>[];
+                  if (links.isEmpty) {
+                    return const Text(
+                      'No document attached — check 15 GB Hybrid Drive folder',
+                      style: TextStyle(fontSize: 12),
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Documents / Evidence:', style: TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      for (final link in links)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: OutlinedButton.icon(
+                            onPressed: () => _openDocLink(link),
+                            icon: const Icon(Icons.open_in_new, size: 16),
+                            label: Text(link, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
               const SizedBox(height: 8),
-              Text('Documents / 15 GB Drive: $docInfo', style: Theme.of(ctx2).textTheme.bodySmall),
-              const SizedBox(height: 12),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 value: _docsVerified,
@@ -171,14 +275,14 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                   FilledButton(
                     onPressed: () {
                       Navigator.pop(ctx2);
-                      _decide(context, ref, 'APPROVE');
+                      _decide('APPROVE');
                     },
                     child: const Text('Approve'),
                   ),
                   OutlinedButton(
                     onPressed: () {
                       Navigator.pop(ctx2);
-                      _decide(context, ref, 'REJECT');
+                      _decide('REJECT');
                     },
                     child: const Text('Reject'),
                   ),
@@ -191,16 +295,42 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
     );
   }
 
-  Future<void> _decide(BuildContext context, WidgetRef ref, String decision) async {
+  Future<void> _deleteCurrentRequest() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    final reqId = widget.row['id'];
+    final refCode = (widget.row['reference_code'] ?? reqId ?? '').toString();
+    try {
+      await ref.read(approvalRepositoryProvider).deleteRequest(reqId);
+      await _emitNotification('Request Deleted', 'Removed request $refCode');
+      if (mounted) showSnack(context, 'Deleted: $refCode');
+    } catch (e1) {
+      try {
+        await Supabase.instance.client.from('approval_actions').delete().eq('access_request_id', reqId);
+        await Supabase.instance.client.from('access_requests').delete().eq('id', reqId);
+        await _emitNotification('Request Deleted', 'Removed request $refCode');
+        if (mounted) showSnack(context, 'Deleted: $refCode');
+      } catch (e2) {
+        if (mounted) {
+          showSnack(context, 'Delete error: ${e2.toString()}', error: true);
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+      _refreshAll();
+    }
+  }
+
+  Future<void> _decide(String decision) async {
     if (_submitting) return;
     final ctrl = TextEditingController();
-    final label = decision == 'APPROVE'
+    final titleText = decision == 'APPROVE'
         ? 'Approve Request'
         : (decision == 'REJECT' ? 'Reject Request' : 'Request More Information');
     final reason = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(label),
+        title: Text(titleText),
         content: TextField(
           controller: ctrl,
           maxLines: 3,
@@ -213,13 +343,13 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim().isEmpty ? label : ctrl.text.trim()),
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim().isEmpty ? titleText : ctrl.text.trim()),
             child: const Text('Submit'),
           ),
         ],
       ),
     );
-    if (reason == null || !context.mounted) return;
+    if (reason == null || !mounted) return;
 
     setState(() => _submitting = true);
     final reqId = widget.row['id'];
@@ -227,6 +357,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
     final nextState = decision == 'APPROVE'
         ? 'APPROVED'
         : (decision == 'REJECT' ? 'REJECTED' : 'NEEDS_INFORMATION');
+    String lastErr = '';
 
     try {
       await ref.read(approvalRepositoryProvider).decide(
@@ -235,37 +366,41 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
             reason: reason,
           );
       await _emitNotification('Request $nextState ($refCode)', reason);
-      if (context.mounted) showSnack(context, 'Submitted & Notified: $nextState');
-    } catch (_) {
+      if (mounted) showSnack(context, 'Submitted: $nextState');
+      if (mounted) setState(() => _submitting = false);
+      _refreshAll();
+      return;
+    } catch (e) {
+      lastErr = e.toString();
+    }
+
+    try {
+      await ref.read(approvalRepositoryProvider).directStateUpdate(reqId, nextState, reason);
+      await _emitNotification('Request $nextState ($refCode)', reason);
+      if (mounted) showSnack(context, 'Updated: $nextState');
+    } catch (e2) {
+      lastErr = e2.toString();
       try {
-        await ref.read(approvalRepositoryProvider).directStateUpdate(reqId, nextState, reason);
+        await Supabase.instance.client
+            .from('access_requests')
+            .update({'state': nextState, 'decision_reason': reason})
+            .eq('id', reqId);
         await _emitNotification('Request $nextState ($refCode)', reason);
-        if (context.mounted) showSnack(context, 'Updated & Notified: $nextState');
-      } catch (e2) {
-        try {
-          final db = Supabase.instance.client;
-          await db.from('access_requests').update({
-            'state': nextState,
-            'status': nextState,
-            'decision_reason': reason,
-          }).eq('id', reqId);
-          await _emitNotification('Request $nextState ($refCode)', reason);
-          if (context.mounted) showSnack(context, 'Saved & Notified: $nextState');
-        } catch (e3) {
-          if (context.mounted) {
-            showSnack(context, 'Submit failed: ${e3.toString()}', error: true);
-          }
+        if (mounted) showSnack(context, 'Saved: $nextState');
+      } catch (e3) {
+        lastErr = e3.toString();
+        if (mounted) {
+          showSnack(context, 'Submit failed: $lastErr', error: true);
         }
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
-      _refreshAll(ref);
+      _refreshAll();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final ref = context as WidgetRef;
     final l = AppLocalizations.of(context)!;
     final row = widget.row;
     final isSchool = row['kind'] == 'SCHOOL_REGISTRATION';
@@ -273,6 +408,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
         ? (row['institution_name']?.toString() ?? 'School Request')
         : '${row['requester_name'] ?? ''} -> ${row['requested_role']?.toString() ?? ''}';
     final st = (row['state'] ?? row['status'] ?? 'PENDING_REVIEW').toString();
+    final docCandidates = _extractDocCandidates(row);
     final canAct = st == 'PENDING_REVIEW' ||
         st == 'REQUESTED' ||
         st == 'SUBMITTED' ||
@@ -312,10 +448,19 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 IconButton(
-                  tooltip: 'Verify Details & Docs',
+                  tooltip: 'Verify Details & Documents',
                   icon: const Icon(Icons.fact_check_outlined, size: 18),
-                  onPressed: () => _openVerifyModal(context, ref, row),
+                  onPressed: () => _openVerifyModal(row),
                 ),
+                if (docCandidates.isNotEmpty)
+                  IconButton(
+                    tooltip: 'Open / Copy Document',
+                    icon: const Icon(Icons.description_outlined, size: 18),
+                    onPressed: () async {
+                      final links = await _resolveDocumentLinks(row);
+                      if (links.isNotEmpty) await _openDocLink(links.first);
+                    },
+                  ),
                 IconButton(
                   tooltip: 'Send Details to Admin Gmail',
                   icon: const Icon(Icons.mail_outline, size: 18),
@@ -333,30 +478,19 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                 IconButton(
                   tooltip: 'Delete Request',
                   icon: const Icon(Icons.delete_outline, size: 18),
-                  onPressed: _submitting
-                      ? null
-                      : () async {
-                          try {
-                            await ref.read(approvalRepositoryProvider).deleteRequest(row['id']);
-                            await _emitNotification('Request Deleted', 'Removed request ${row['reference_code'] ?? row['id']}');
-                            if (context.mounted) showSnack(context, 'Deleted & Notified');
-                            _refreshAll(ref);
-                          } catch (e) {
-                            if (context.mounted) showSnack(context, e.toString(), error: true);
-                          }
-                        },
+                  onPressed: _submitting ? null : _deleteCurrentRequest,
                 ),
                 if (canAct) ...[
                   FilledButton.tonal(
-                    onPressed: _submitting ? null : () => _decide(context, ref, 'APPROVE'),
+                    onPressed: _submitting ? null : () => _decide('APPROVE'),
                     child: Text(_submitting ? 'Saving...' : l.appr_approve),
                   ),
                   OutlinedButton(
-                    onPressed: _submitting ? null : () => _decide(context, ref, 'REJECT'),
+                    onPressed: _submitting ? null : () => _decide('REJECT'),
                     child: Text(l.appr_reject),
                   ),
                   TextButton(
-                    onPressed: _submitting ? null : () => _decide(context, ref, 'REQUEST_INFO'),
+                    onPressed: _submitting ? null : () => _decide('REQUEST_INFO'),
                     child: Text(l.appr_requestInfo),
                   ),
                 ] else
